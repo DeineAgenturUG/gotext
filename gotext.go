@@ -25,7 +25,12 @@ package gotext
 import (
 	"fmt"
 	"sync"
+
+	"github.com/leonelquinteros/gotext/format"
 )
+
+// Sprintf alias from submodule
+var Sprintf = format.Sprintf
 
 // Global environment variables
 type config struct {
