@@ -7,6 +7,8 @@ import (
 	"testing"
 )
 
+var instance = GetInstance("test","es","/tmp/test")
+
 func TestGettersSetters(t *testing.T) {
 	SetDomain("test")
 	dom := GetDomain()

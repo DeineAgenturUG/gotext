@@ -74,5 +74,5 @@ func SetLibary(libary string) {
 	gotext.SetLibrary(libary)
 }
 func GetLibary() string {
-	gotext.GetLibrary()
+	return gotext.GetLibrary()
 }
