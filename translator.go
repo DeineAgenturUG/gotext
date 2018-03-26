@@ -8,8 +8,8 @@ package gotext
 type Translator interface {
 	ParseFile(f string)
 	Parse(buf []byte)
-	Get(str string, vars ...interface{}) string
-	GetN(str, plural string, n int, vars ...interface{}) string
-	GetC(str, ctx string, vars ...interface{}) string
-	GetNC(str, plural string, n int, ctx string, vars ...interface{}) string
+	Get(str string) string
+	GetN(str, plural string, n int) string
+	GetC(str, ctx string) string
+	GetNC(str, plural string, n int, ctx string) string
 }

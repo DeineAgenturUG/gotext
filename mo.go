@@ -342,43 +342,43 @@ func (mo *Mo) pluralForm(n int) int {
 
 // Get retrieves the corresponding Translation for the given string.
 // Supports optional parameters (vars... interface{}) to be inserted on the formatted string using the fmt.Printf syntax.
-func (mo *Mo) Get(str string, vars ...interface{}) string {
+func (mo *Mo) Get(str string) string {
 	// Sync read
 	mo.RLock()
 	defer mo.RUnlock()
 
 	if mo.translations != nil {
 		if _, ok := mo.translations[str]; ok {
-			return Printf(mo.translations[str].Get(), vars...)
+			return mo.translations[str].Get()
 		}
 	}
 
 	// Return the same we received by default
-	return Printf(str, vars...)
+	return str
 }
 
 // GetN retrieves the (N)th plural form of Translation for the given string.
 // Supports optional parameters (vars... interface{}) to be inserted on the formatted string using the fmt.Printf syntax.
-func (mo *Mo) GetN(str, plural string, n int, vars ...interface{}) string {
+func (mo *Mo) GetN(str, plural string, n int) string {
 	// Sync read
 	mo.RLock()
 	defer mo.RUnlock()
 
 	if mo.translations != nil {
 		if _, ok := mo.translations[str]; ok {
-			return Printf(mo.translations[str].GetN(mo.pluralForm(n)), vars...)
+			return mo.translations[str].GetN(mo.pluralForm(n))
 		}
 	}
 
 	if n == 1 {
-		return Printf(str, vars...)
+		return str
 	}
-	return Printf(plural, vars...)
+	return plural
 }
 
 // GetC retrieves the corresponding Translation for a given string in the given context.
 // Supports optional parameters (vars... interface{}) to be inserted on the formatted string using the fmt.Printf syntax.
-func (mo *Mo) GetC(str, ctx string, vars ...interface{}) string {
+func (mo *Mo) GetC(str, ctx string) string {
 	// Sync read
 	mo.RLock()
 	defer mo.RUnlock()
@@ -387,19 +387,19 @@ func (mo *Mo) GetC(str, ctx string, vars ...interface{}) string {
 		if _, ok := mo.contexts[ctx]; ok {
 			if mo.contexts[ctx] != nil {
 				if _, ok := mo.contexts[ctx][str]; ok {
-					return Printf(mo.contexts[ctx][str].Get(), vars...)
+					return mo.contexts[ctx][str].Get()
 				}
 			}
 		}
 	}
 
 	// Return the string we received by default
-	return Printf(str, vars...)
+	return str
 }
 
 // GetNC retrieves the (N)th plural form of Translation for the given string in the given context.
 // Supports optional parameters (vars... interface{}) to be inserted on the formatted string using the fmt.Printf syntax.
-func (mo *Mo) GetNC(str, plural string, n int, ctx string, vars ...interface{}) string {
+func (mo *Mo) GetNC(str, plural string, n int, ctx string) string {
 	// Sync read
 	mo.RLock()
 	defer mo.RUnlock()
@@ -408,14 +408,14 @@ func (mo *Mo) GetNC(str, plural string, n int, ctx string, vars ...interface{}) 
 		if _, ok := mo.contexts[ctx]; ok {
 			if mo.contexts[ctx] != nil {
 				if _, ok := mo.contexts[ctx][str]; ok {
-					return Printf(mo.contexts[ctx][str].GetN(mo.pluralForm(n)), vars...)
+					return mo.contexts[ctx][str].GetN(mo.pluralForm(n))
 				}
 			}
 		}
 	}
 
 	if n == 1 {
-		return Printf(str, vars...)
+		return str
 	}
-	return Printf(plural, vars...)
+	return plural
 }
