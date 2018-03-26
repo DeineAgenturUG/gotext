@@ -188,7 +188,7 @@ func (l *Locale) DNGettext(dom, str, plural string, n int) string {
 
 // GetC uses a domain "default" to return the corresponding Translation of the given string in the given context.
 // Supports optional parameters (vars... interface{}) to be inserted on the formatted string using the fmt.Printf syntax.
-func (l *Locale) PGettext(str, ctx string) string {
+func (l *Locale) PGettext(ctx, str string) string {
 	return l.DPGettext(l.defaultDomain, ctx, str)
 }
 
