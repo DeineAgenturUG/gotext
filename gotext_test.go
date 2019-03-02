@@ -8,9 +8,11 @@ import (
 	"testing"
 )
 
-var instance = GetInstance("test","es","/tmp/test")
-
+func loadInstance() {
+	GetInstance([]string{"test"}, []string{"es"}, "test", "es", "/tmp/test")
+}
 func TestGettersSetters(t *testing.T) {
+	loadInstance()
 	SetDomain("test")
 	dom := GetDomain()
 
@@ -34,6 +36,7 @@ func TestGettersSetters(t *testing.T) {
 }
 
 func TestPackageFunctions(t *testing.T) {
+	loadInstance()
 	// Set PO content
 	str := `
 msgid   ""
@@ -181,6 +184,7 @@ msgstr "Another text on another domain"
 }
 
 func TestUntranslated(t *testing.T) {
+	loadInstance()
 	// Set PO content
 	str := `
 msgid ""
@@ -254,6 +258,7 @@ msgstr[1] ""
 }
 
 func TestMoAndPoTranslator(t *testing.T) {
+	loadInstance()
 
 	fixPath, _ := filepath.Abs("./fixtures/")
 
@@ -286,6 +291,7 @@ func TestMoAndPoTranslator(t *testing.T) {
 }
 
 func TestDomains(t *testing.T) {
+	loadInstance()
 	// Set PO content
 	strDefault := `
 msgid ""
@@ -388,6 +394,7 @@ msgstr[1] "Custom ctx translations"
 }
 
 func TestPackageRace(t *testing.T) {
+	loadInstance()
 	// Set PO content
 	str := `# Some comment
 msgid "My text"

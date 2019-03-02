@@ -25,12 +25,7 @@ package gotext
 import (
 	"encoding/gob"
 	"sync"
-
-	"github.com/DeineAgenturUG/gotext/format"
 )
-
-// Sprintf alias from submodule
-var Sprintf = format.Sprintf
 
 // Global environment variables
 type config struct {
@@ -48,23 +43,34 @@ type config struct {
 	library string
 
 	// Storage for package level methods
-	storage map[string]*Locale
+	storage sync.Map
 }
 
 var (
 	globalConfig *config
 	once         sync.Once
 
+	// DefaultDomain as mostly used
 	DefaultDomain = "default"
 )
 
 func init() {
+	// Init default configuration
+	globalConfig = &config{
+		loadDomains:   []string{"default"},
+		domain:        "default",
+		loadLanguages: []string{"en_US"},
+		language:      "en_US",
+		library:       "/usr/local/share/locale",
+		storage:       sync.Map{},
+	}
+
 	// Register Translator types for gob encoding
 	gob.Register(TranslatorEncoding{})
 }
 
 // GetInstance Create Instance default configuration
-func GetInstance(loadDomains, loadLanguages []string, defaultDomain, defaultLanguage, library string) *config {
+func GetInstance(loadDomains, loadLanguages []string, defaultDomain, defaultLanguage, library string) {
 	once.Do(func() {
 		globalConfig = &config{
 			loadDomains:   loadDomains,
@@ -72,61 +78,39 @@ func GetInstance(loadDomains, loadLanguages []string, defaultDomain, defaultLang
 			loadLanguages: loadLanguages,
 			language:      defaultLanguage,
 			library:       library,
-			storage:       make(map[string]*Locale),
+			storage:       sync.Map{},
 		}
 		globalConfig.loadStorage(true)
 	})
-	return globalConfig
 }
 
 // loadStorage creates a new Locale object at package level based on the Global variables settings.
 // It's called automatically when trying to use Get or GetD methods.
 func (c *config) loadStorage(force bool) *config {
-	c.Lock()
+	c.RLock()
 
-	if c.storage == nil {
-		c.storage = make(map[string]*Locale)
-	}
-	if c.storage[c.language] == nil || force {
-		c.storage[c.language] = NewLocale(c.library, c.language)
-	}
-	if _, ok := c.storage[c.language].Domains[c.domain]; !ok || force {
-		c.storage[c.language].AddDomain(c.domain)
-	}
-	for _, language := range c.loadLanguages {
-		if c.storage[language] == nil || force {
-			c.storage[language] = NewLocale(c.library, c.language)
-		}
+	if v, _ := c.storage.LoadOrStore(c.language, NewLocale(c.library, c.language)); v != nil {
+		v2 := v.(*Locale)
+		v2.AddDomain(c.domain)
 		for _, domain := range c.loadDomains {
-			if _, ok := c.storage[language].Domains[domain]; !ok || force {
-				c.storage[language].AddDomain(domain)
+			if _, ok := v2.Domains.Load(domain); !ok || force {
+				v2.AddDomain(domain)
 			}
 		}
 	}
 
-	c.Unlock()
-	return c
-}
-
-// loadStorage creates a new Locale object at package level based on the Global variables settings.
-// It's called automatically when trying to use Get or GetD methods.
-func (c *config) loadDomain(domain string, force bool) *config {
-	c.Lock()
-
-	if c.storage == nil {
-		c.storage = make(map[string]*Locale)
+	for _, language := range c.loadLanguages {
+		if v, _ := c.storage.LoadOrStore(language, NewLocale(c.library, language)); v != nil {
+			v2 := v.(*Locale)
+			v2.AddDomain(c.domain)
+			for _, domain := range c.loadDomains {
+				if _, ok := v2.Domains.Load(domain); !ok || force {
+					v2.AddDomain(domain)
+				}
+			}
+		}
 	}
-	if c.storage[c.language] == nil || force {
-		c.storage[c.language] = NewLocale(c.library, c.language)
-	}
-	if _, ok := c.storage[c.language].Domains[c.domain]; !ok || force {
-		c.storage[c.language].AddDomain(c.domain)
-	}
-	if _, ok := c.storage[c.language].Domains[domain]; !ok || force {
-		c.storage[c.language].AddDomain(domain)
-	}
-
-	c.Unlock()
+	c.RUnlock()
 	return c
 }
 
@@ -144,6 +128,8 @@ func (c *config) GetDomain() string {
 func (c *config) SetDomain(dom string) *config {
 	c.Lock()
 	c.domain = dom
+	c.loadDomains = append(c.loadDomains, dom)
+	c.loadDomains = UniqStrings(c.loadDomains)
 	c.Unlock()
 
 	c.loadStorage(true)
@@ -228,13 +214,28 @@ func (c *config) GetD(dom, str string, vars ...interface{}) string {
 // GetND retrieves the (N)th plural form of translation in the given domain for a given string.
 // Supports optional parameters (vars... interface{}) to be inserted on the formatted string using the fmt.Printf syntax.
 func (c *config) GetND(dom, str, plural string, n int, vars ...interface{}) string {
-	// Try to load default package Locale storage
-	c.loadStorage(false)
 
-	// Return translation
-	c.RLock()
-	tr := c.storage[c.language].GetND(dom, str, plural, n, vars...)
-	c.RUnlock()
+	var tr string
+
+	globalConfig.RLock()
+	var local = c.language
+	globalConfig.RUnlock()
+
+	if v, _ := c.storage.Load(local); v != nil {
+		v2 := v.(*Locale)
+		var notIncluded = true
+		v2.Domains.Range(func(k, v interface{}) bool {
+			if k == dom {
+				notIncluded = false
+			}
+			return true
+		})
+		if notIncluded {
+			v2.AddDomain(dom)
+		}
+		c.loadStorage(true)
+		tr = v2.GetND(dom, str, plural, n, vars...)
+	}
 
 	return tr
 }
@@ -260,13 +261,25 @@ func (c *config) GetDC(dom, str, ctx string, vars ...interface{}) string {
 // GetNDC retrieves the (N)th plural form of translation in the given domain for a given string.
 // Supports optional parameters (vars... interface{}) to be inserted on the formatted string using the fmt.Printf syntax.
 func (c *config) GetNDC(dom, str, plural string, n int, ctx string, vars ...interface{}) string {
-	// Try to load default package Locale storage
-	c.loadStorage(false)
-
-	// Return translation
-	c.RLock()
-	tr := c.storage[c.language].GetNDC(dom, str, plural, n, ctx, vars...)
-	c.RUnlock()
+	var tr string
+	globalConfig.RLock()
+	var local = c.language
+	globalConfig.RUnlock()
+	if v, _ := c.storage.Load(local); v != nil {
+		v2 := v.(*Locale)
+		var notIncluded = true
+		v2.Domains.Range(func(key, value interface{}) bool {
+			if key == dom {
+				notIncluded = false
+			}
+			return true
+		})
+		if notIncluded {
+			v2.AddDomain(dom)
+		}
+		c.loadStorage(true)
+		tr = v2.GetNDC(dom, str, plural, n, ctx, vars...)
+	}
 
 	return tr
 }
@@ -274,23 +287,16 @@ func (c *config) GetNDC(dom, str, plural string, n int, ctx string, vars ...inte
 // GetDomain is the domain getter for the package configuration
 func GetDomain() string {
 	var dom string
-	globalConfig.RLock()
 
-	dom = globalConfig.storage[globalConfig.GetLanguage()].GetDomain()
-
-	if globalConfig.storage != nil && dom == "" {
-		for _, storage := range globalConfig.storage {
-			if dom != "" {
-				break
-			}
-			dom = storage.GetDomain()
-		}
+	if v, _ := globalConfig.storage.Load(globalConfig.GetLanguage()); v != nil {
+		v2 := v.(*Locale)
+		dom = v2.GetDomain()
 	}
 
+	globalConfig.RLock()
 	if dom == "" {
 		dom = globalConfig.domain
 	}
-
 	globalConfig.RUnlock()
 
 	return dom
@@ -301,12 +307,13 @@ func GetDomain() string {
 func SetDomain(dom string) {
 	globalConfig.Lock()
 	globalConfig.domain = dom
-	if globalConfig.storage != nil {
-		for _, storage := range globalConfig.storage {
-			storage.SetDomain(dom)
-		}
-	}
 	globalConfig.Unlock()
+
+	globalConfig.storage.Range(func(key interface{}, value interface{}) bool {
+		storage := value.(*Locale)
+		storage.SetDomain(dom)
+		return true
+	})
 
 	globalConfig.loadStorage(true)
 }
@@ -314,10 +321,9 @@ func SetDomain(dom string) {
 // GetLanguage is the language getter for the package configuration
 func GetLanguage() string {
 	globalConfig.RLock()
-	lang := globalConfig.language
-	globalConfig.RUnlock()
+	defer globalConfig.RUnlock()
 
-	return lang
+	return globalConfig.language
 }
 
 // SetLanguage sets the language code to be used at package level.
@@ -333,10 +339,9 @@ func SetLanguage(lang string) {
 // GetLibrary is the library getter for the package configuration
 func GetLibrary() string {
 	globalConfig.RLock()
-	lib := globalConfig.library
-	globalConfig.RUnlock()
+	defer globalConfig.RUnlock()
 
-	return lib
+	return globalConfig.library
 }
 
 // SetLibrary sets the root path for the loale directories and files to be used at package level.
@@ -358,6 +363,8 @@ func Configure(lib, lang, dom string) {
 	globalConfig.library = lib
 	globalConfig.language = SimplifiedLocale(lang)
 	globalConfig.domain = dom
+	globalConfig.loadDomains = append(globalConfig.loadDomains, dom)
+	globalConfig.loadDomains = UniqStrings(globalConfig.loadDomains)
 	globalConfig.Unlock()
 
 	globalConfig.loadStorage(true)

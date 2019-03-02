@@ -8,6 +8,7 @@ package gotext
 import (
 	"os"
 	"path"
+	"sync"
 	"testing"
 )
 
@@ -86,7 +87,7 @@ msgstr "More Translation"
 	l := NewLocale("/tmp", "en_US")
 
 	// Force nil domain storage
-	l.Domains = nil
+	l.Domains = sync.Map{}
 
 	// Add domain
 	l.AddDomain("my_domain")
@@ -216,7 +217,7 @@ msgstr "More Translation"
 	l := NewLocale("/tmp", "en_US")
 
 	// Force nil domain storage
-	l.Domains = nil
+	l.Domains = sync.Map{}
 
 	// Add domain
 	l.AddDomain("my_domain")
@@ -274,7 +275,7 @@ msgstr "More Translation"
 	l = NewLocale("/tmp", "golem")
 
 	// Force nil domain storage
-	l.Domains = nil
+	l.Domains = sync.Map{}
 
 	// Add domain
 	l.SetDomain("my_domain")
@@ -300,7 +301,7 @@ msgstr "More Translation"
 	l = NewLocale("fixtures/", "fr_FR")
 
 	// Force nil domain storage
-	l.Domains = nil
+	l.Domains = sync.Map{}
 
 	// Add domain
 	l.SetDomain("default")
@@ -326,7 +327,7 @@ msgstr "More Translation"
 	l = NewLocale("fixtures/", "de_DE")
 
 	// Force nil domain storage
-	l.Domains = nil
+	l.Domains = sync.Map{}
 
 	// Add domain
 	l.SetDomain("default")
@@ -352,7 +353,7 @@ msgstr "More Translation"
 	l = NewLocale("fixtures/", "de_AT")
 
 	// Force nil domain storage
-	l.Domains = nil
+	l.Domains = sync.Map{}
 
 	// Add domain
 	l.SetDomain("default")

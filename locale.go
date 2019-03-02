@@ -53,7 +53,7 @@ type Locale struct {
 	lang string
 
 	// List of available Domains for this locale.
-	Domains map[string]Translator
+	Domains sync.Map
 
 	// First AddDomain is default Domain
 	defaultDomain string
@@ -66,35 +66,20 @@ type Locale struct {
 // It receives a path for the i18n .po/.mo files directory (p) and a language code to use (l).
 func NewLocale(p, l string) *Locale {
 	return &Locale{
-		path:    p,
-		lang:    SimplifiedLocale(l),
-		Domains: make(map[string]Translator),
+		path: p,
+		lang: SimplifiedLocale(l),
 	}
 }
 
-func (l *Locale) findExt(dom, ext string) string {
-	filename := path.Join(l.path, l.lang, "LC_MESSAGES", dom+"."+ext)
+func (l *Locale) findExt(dom, ext, lang string) string {
+	filename := path.Join(l.path, lang, "LC_MESSAGES", dom+"."+ext)
 	if _, err := os.Stat(filename); err == nil {
 		return filename
-	}
-
-	if len(l.lang) > 2 {
-		filename = path.Join(l.path, l.lang[:2], "LC_MESSAGES", dom+"."+ext)
-		if _, err := os.Stat(filename); err == nil {
-			return filename
-		}
 	}
 
 	filename = path.Join(l.path, l.lang, dom+"."+ext)
 	if _, err := os.Stat(filename); err == nil {
 		return filename
-	}
-
-	if len(l.lang) > 2 {
-		filename = path.Join(l.path, l.lang[:2], dom+"."+ext)
-		if _, err := os.Stat(filename); err == nil {
-			return filename
-		}
 	}
 
 	return ""
@@ -105,51 +90,63 @@ func (l *Locale) findExt(dom, ext string) string {
 func (l *Locale) AddDomain(dom string) {
 	var poObj Translator
 
-	file := l.findExt(dom, "po")
+	file := l.findExt(dom, "po", l.lang)
 	if file != "" {
 		poObj = new(Po)
 		// Parse file.
 		poObj.ParseFile(file)
+		goto nextAddDomain
 	} else {
-		file = l.findExt(dom, "mo")
+		file = l.findExt(dom, "mo", l.lang)
 		if file != "" {
 			poObj = new(Mo)
 			// Parse file.
 			poObj.ParseFile(file)
+			goto nextAddDomain
 		} else {
-			// fallback return if no file found with
-			return
+			file := l.findExt(dom, "po", l.lang[:2])
+			if file != "" {
+				poObj = new(Po)
+				// Parse file.
+				poObj.ParseFile(file)
+				goto nextAddDomain
+			} else {
+				file = l.findExt(dom, "mo", l.lang[:2])
+				if file != "" {
+					poObj = new(Mo)
+					// Parse file.
+					poObj.ParseFile(file)
+					goto nextAddDomain
+				} else {
+					// fallback return if no file found with
+					return
+				}
+			}
 		}
 	}
 
+	// Goto Mark: nextAddDomain
+nextAddDomain:
 	// Save new domain
 	l.Lock()
-
-	if l.Domains == nil {
-		l.Domains = make(map[string]Translator)
-	}
 	if l.defaultDomain == "" {
 		l.defaultDomain = dom
 	}
-	l.Domains[dom] = poObj
-
 	// Unlock "Save new domain"
 	l.Unlock()
+
+	l.Domains.Store(dom, poObj)
 }
 
 // AddTranslator takes a domain name and a Translator object to make it available in the Locale object.
 func (l *Locale) AddTranslator(dom string, tr Translator) {
 	l.Lock()
-
-	if l.Domains == nil {
-		l.Domains = make(map[string]Translator)
-	}
 	if l.defaultDomain == "" {
 		l.defaultDomain = dom
 	}
-	l.Domains[dom] = tr
-
 	l.Unlock()
+	l.Domains.Store(dom, tr)
+
 }
 
 // GetDomain is the domain getter for Locale configuration
@@ -188,16 +185,9 @@ func (l *Locale) GetD(dom, str string, vars ...interface{}) string {
 // GetND retrieves the (N)th plural form of Translation in the given domain for the given string.
 // Supports optional parameters (vars... interface{}) to be inserted on the formatted string using the fmt.Printf syntax.
 func (l *Locale) GetND(dom, str, plural string, n int, vars ...interface{}) string {
-	// Sync read
-	l.RLock()
-	defer l.RUnlock()
 
-	if l.Domains != nil {
-		if _, ok := l.Domains[dom]; ok {
-			if l.Domains[dom] != nil {
-				return l.Domains[dom].GetN(str, plural, n, vars...)
-			}
-		}
+	if v, ok := l.Domains.Load(dom); ok {
+		return v.(Translator).GetN(str, plural, n, vars...)
 	}
 
 	// Return the same we received by default
@@ -225,16 +215,9 @@ func (l *Locale) GetDC(dom, str, ctx string, vars ...interface{}) string {
 // GetNDC retrieves the (N)th plural form of Translation in the given domain for the given string in the given context.
 // Supports optional parameters (vars... interface{}) to be inserted on the formatted string using the fmt.Printf syntax.
 func (l *Locale) GetNDC(dom, str, plural string, n int, ctx string, vars ...interface{}) string {
-	// Sync read
-	l.RLock()
-	defer l.RUnlock()
 
-	if l.Domains != nil {
-		if _, ok := l.Domains[dom]; ok {
-			if l.Domains[dom] != nil {
-				return l.Domains[dom].GetNC(str, plural, n, ctx, vars...)
-			}
-		}
+	if v, ok := l.Domains.Load(dom); ok {
+		return v.(Translator).GetNC(str, plural, n, ctx, vars...)
 	}
 
 	// Return the same we received by default
@@ -254,13 +237,15 @@ func (l *Locale) MarshalBinary() ([]byte, error) {
 	obj := new(LocaleEncoding)
 	obj.DefaultDomain = l.defaultDomain
 	obj.Domains = make(map[string][]byte)
-	for k, v := range l.Domains {
+	l.Domains.Range(func(k, v interface{}) bool {
 		var err error
-		obj.Domains[k], err = v.MarshalBinary()
+		obj.Domains[k.(string)], err = v.(Translator).MarshalBinary()
 		if err != nil {
-			return nil, err
+			return false
 		}
-	}
+		return true
+	})
+
 	obj.Lang = l.lang
 	obj.Path = l.path
 
@@ -287,7 +272,6 @@ func (l *Locale) UnmarshalBinary(data []byte) error {
 	l.path = obj.Path
 
 	// Decode Domains
-	l.Domains = make(map[string]Translator)
 	for k, v := range obj.Domains {
 		var tr TranslatorEncoding
 		buff := bytes.NewBuffer(v)
@@ -297,7 +281,7 @@ func (l *Locale) UnmarshalBinary(data []byte) error {
 			return err
 		}
 
-		l.Domains[k] = tr.GetTranslator()
+		l.Domains.Store(k, tr.GetTranslator())
 	}
 
 	return nil

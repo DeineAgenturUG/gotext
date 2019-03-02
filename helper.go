@@ -13,6 +13,21 @@ import (
 
 var re = regexp.MustCompile(`%\(([a-zA-Z0-9_]+)\)[.0-9]*[svTtbcdoqXxUeEfFgGp]`)
 
+// UniqStrings returns a unique subset of the string slice provided.
+func UniqStrings(input []string) []string {
+	u := make([]string, 0, len(input))
+	m := make(map[string]bool)
+
+	for _, val := range input {
+		if _, ok := m[val]; !ok {
+			m[val] = true
+			u = append(u, val)
+		}
+	}
+
+	return u
+}
+
 // SimplifiedLocale simplified locale like " en_US"/"de_DE "/en_US.UTF-8/zh_CN/zh_TW/el_GR@euro/... to en_US, de_DE, zh_CN, el_GR...
 func SimplifiedLocale(lang string) string {
 	// en_US/en_US.UTF-8/zh_CN/zh_TW/el_GR@euro/...

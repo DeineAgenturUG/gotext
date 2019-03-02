@@ -28,11 +28,13 @@ package gnuGettext
 
 import (
 	"github.com/DeineAgenturUG/gotext"
-	"github.com/DeineAgenturUG/gotext/format"
 )
 
+// GetInstance helper to load multiple languages and domains at once
+var GetInstance = gotext.GetInstance
+
 // Sprinf alias from format submodule
-var Sprint = format.Sprintf
+var Sprintf = gotext.Sprintf
 
 func Gettext(msgid string) string {
 	return gotext.Get(msgid)
