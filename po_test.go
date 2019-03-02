@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2018 DeineAgentur UG https://www.deineagentur.com. All rights reserved.
+ * Licensed under the MIT License. See LICENSE file in the project root for full license information.
+ */
+
 package gotext
 
 import (
@@ -5,6 +10,28 @@ import (
 	"path"
 	"testing"
 )
+
+func TestPo_Get(t *testing.T) {
+	// Create po object
+	po := new(Po)
+
+	// Try to parse a directory
+	po.ParseFile(path.Clean(os.TempDir()))
+
+	// Parse file
+	po.ParseFile("fixtures/en_US/default.po")
+
+	// Test translations
+	tr := po.Get("My text")
+	if tr != "Translated text" {
+		t.Errorf("Expected 'Translated text' but got '%s'", tr)
+	}
+	// Test translations
+	tr = po.Get("language")
+	if tr != "en_US" {
+		t.Errorf("Expected 'en_US' but got '%s'", tr)
+	}
+}
 
 func TestPo(t *testing.T) {
 	// Set PO content
@@ -28,13 +55,15 @@ msgid "Another string"
 msgstr ""
 
 # Multi-line msgid
-msgid "multi"
+msgid ""
+"multi"
 "line"
 "id"
 msgstr "id with multiline content"
 
 # Multi-line msgid_plural
-msgid "multi"
+msgid "" 
+"multi"
 "line"
 "plural"
 "id"
@@ -42,7 +71,8 @@ msgstr "plural id with multiline content"
 
 #Multi-line string
 msgid "Multi-line"
-msgstr "Multi "
+msgstr "" 
+"Multi "
 "line"
 
 msgid "One with var: %s"
@@ -58,13 +88,13 @@ msgstr[0] "This one is the singular in a Ctx context: %s"
 msgstr[1] "This one is the plural in a Ctx context: %s"
 
 msgid "Some random"
-msgstr "Some random translation"
+msgstr "Some random Translation"
 
 msgctxt "Ctx"
 msgid "Some random in a context"
-msgstr "Some random translation in a context"
+msgstr "Some random Translation in a context"
 
-msgid "Empty translation"
+msgid "Empty Translation"
 msgstr ""
 
 msgid "Empty plural form singular"
@@ -73,7 +103,7 @@ msgstr[0] "Singular translated"
 msgstr[1] ""
 
 msgid "More"
-msgstr "More translation"
+msgstr "More Translation"
 
 	`
 
@@ -136,7 +166,7 @@ msgstr "More translation"
 		t.Errorf("Expected 'This one is the plural: Variable' but got '%s'", tr)
 	}
 
-	// Test inexistent translations
+	// Test not existent translations
 	tr = po.Get("This is a test")
 	if tr != "This is a test" {
 		t.Errorf("Expected 'This is a test' but got '%s'", tr)
@@ -170,10 +200,10 @@ msgstr "More translation"
 		t.Errorf("Expected 'Original' but got '%s'", tr)
 	}
 
-	// Test empty translation strings
-	tr = po.Get("Empty translation")
-	if tr != "Empty translation" {
-		t.Errorf("Expected 'Empty translation' but got '%s'", tr)
+	// Test empty Translation strings
+	tr = po.Get("Empty Translation")
+	if tr != "Empty Translation" {
+		t.Errorf("Expected 'Empty Translation' but got '%s'", tr)
 	}
 
 	tr = po.Get("Empty plural form singular")
@@ -191,10 +221,10 @@ msgstr "More translation"
 		t.Errorf("Expected 'Empty plural form' but got '%s'", tr)
 	}
 
-	// Test last translation
+	// Test last Translation
 	tr = po.Get("More")
-	if tr != "More translation" {
-		t.Errorf("Expected 'More translation' but got '%s'", tr)
+	if tr != "More Translation" {
+		t.Errorf("Expected 'More Translation' but got '%s'", tr)
 	}
 }
 
@@ -215,7 +245,37 @@ msgstr[2] "TR Plural 2: %s"
 `
 	// Create po object
 	po := new(Po)
-	po.Parse(str)
+	po.Parse([]byte(str))
+
+	v := "Var"
+	tr := po.GetN("Singular: %s", "Plural: %s", 2, v)
+	if tr != "TR Plural: Var" {
+		t.Errorf("Expected 'TR Plural: Var' but got '%s'", tr)
+	}
+
+	tr = po.GetN("Singular: %s", "Plural: %s", 1, v)
+	if tr != "TR Singular: Var" {
+		t.Errorf("Expected 'TR Singular: Var' but got '%s'", tr)
+	}
+}
+
+func TestPluralNoHeaderInformation(t *testing.T) {
+	// Set PO content
+	str := `
+msgid   ""
+msgstr  ""
+
+msgid "Singular: %s"
+msgid_plural "Plural: %s"
+msgstr[0] "TR Singular: %s"
+msgstr[1] "TR Plural: %s"
+msgstr[2] "TR Plural 2: %s"
+
+	
+`
+	// Create po object
+	po := new(Po)
+	po.Parse([]byte(str))
 
 	v := "Var"
 	tr := po.GetN("Singular: %s", "Plural: %s", 2, v)
@@ -250,7 +310,7 @@ msgstr "Translated example"
 	po := new(Po)
 
 	// Parse
-	po.Parse(str)
+	po.Parse([]byte(str))
 
 	// Check headers expected
 	if po.Language != "en" {
@@ -274,9 +334,9 @@ msgstr "Translated example"
 	po := new(Po)
 
 	// Parse
-	po.Parse(str)
+	po.Parse([]byte(str))
 
-	// Check translation expected
+	// Check Translation expected
 	if po.Get("Example") != "Translated example" {
 		t.Errorf("Expected 'Translated example' but got '%s'", po.Get("Example"))
 	}
@@ -302,7 +362,7 @@ msgstr[3] "Plural form 3"
 	po := new(Po)
 
 	// Parse
-	po.Parse(str)
+	po.Parse([]byte(str))
 
 	// Check plural form
 	n := po.pluralForm(0)
@@ -347,7 +407,7 @@ msgstr[3] "Plural form 3"
 	po := new(Po)
 
 	// Parse
-	po.Parse(str)
+	po.Parse([]byte(str))
 
 	// Check plural form
 	n := po.pluralForm(0)
@@ -388,7 +448,7 @@ msgstr[3] "Plural form 3"
 	po := new(Po)
 
 	// Parse
-	po.Parse(str)
+	po.Parse([]byte(str))
 
 	// Check plural form
 	n := po.pluralForm(0)
@@ -438,7 +498,7 @@ msgstr[3] "Plural form 3"
 	po := new(Po)
 
 	// Parse
-	po.Parse(str)
+	po.Parse([]byte(str))
 
 	// Check plural form
 	n := po.pluralForm(1)
@@ -464,19 +524,18 @@ msgstr[3] "Plural form 3"
 }
 
 func TestTranslationObject(t *testing.T) {
-	tr := newTranslation()
-	str := tr.get()
+	tr := NewTranslation()
+	str := tr.Get()
 
 	if str != "" {
 		t.Errorf("Expected '' but got '%s'", str)
 	}
 
 	// Set id
-	tr.id = "Text"
+	tr.ID = "Text"
+	str = tr.Get()
 
 	// Get again
-	str = tr.get()
-
 	if str != "Text" {
 		t.Errorf("Expected 'Text' but got '%s'", str)
 	}
@@ -509,11 +568,11 @@ msgstr[2] "And this is the second plural form: %s"
 
 	// Parse po content in a goroutine
 	go func(po *Po, done chan bool) {
-		po.Parse(str)
+		po.Parse([]byte(str))
 		done <- true
 	}(po, pc)
 
-	// Read some translation on a goroutine
+	// Read some Translation on a goroutine
 	go func(po *Po, done chan bool) {
 		po.Get("My text")
 		done <- true
@@ -525,4 +584,63 @@ msgstr[2] "And this is the second plural form: %s"
 	// Wait for goroutines to finish
 	<-pc
 	<-rc
+}
+
+func TestNewPoTranslatorRace(t *testing.T) {
+	// Create Po object
+	mo := NewPoTranslator()
+
+	// Create sync channels
+	pc := make(chan bool)
+	rc := make(chan bool)
+
+	// Parse po content in a goroutine
+	go func(mo Translator, done chan bool) {
+		// Parse file
+		mo.ParseFile("fixtures/en_US/default.po")
+		done <- true
+	}(mo, pc)
+
+	// Read some Translation on a goroutine
+	go func(mo Translator, done chan bool) {
+		mo.Get("My text")
+		done <- true
+	}(mo, rc)
+
+	// Read something at top level
+	mo.Get("My text")
+
+	// Wait for goroutines to finish
+	<-pc
+	<-rc
+}
+
+func TestPoBinaryEncoding(t *testing.T) {
+	// Create po objects
+	po := new(Po)
+	po2 := new(Po)
+
+	// Parse file
+	po.ParseFile("fixtures/en_US/default.po")
+
+	buff, err := po.MarshalBinary()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = po2.UnmarshalBinary(buff)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Test translations
+	tr := po2.Get("My text")
+	if tr != "Translated text" {
+		t.Errorf("Expected 'Translated text' but got '%s'", tr)
+	}
+	// Test translations
+	tr = po2.Get("language")
+	if tr != "en_US" {
+		t.Errorf("Expected 'en_US' but got '%s'", tr)
+	}
 }
