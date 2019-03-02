@@ -9,14 +9,14 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: en_US\n"
+"Language: de_DE\n"
 "X-Generator: Poedit 2.0.6\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
 # Initial comment
 # Headers below
 msgid "language"
-msgstr "en_US"
+msgstr "de_DE"
 
 # Some comment
 msgid "My text"
@@ -27,16 +27,25 @@ msgid "Another string"
 msgstr ""
 
 # Multi-line msgid
-msgid "multilineid"
+msgid ""
+"multi\n"
+"line\n"
+"id"
 msgstr "id with multiline content"
 
 # Multi-line msgid_plural
-msgid "multilinepluralid"
+msgid ""
+"multi\n"
+"line\n"
+"plural\n"
+"id"
 msgstr "plural id with multiline content"
 
 # Multi-line string
 msgid "Multi-line"
-msgstr "Multi line"
+msgstr ""
+"Multi \n"
+"line"
 
 msgid "One with var: %s"
 msgid_plural "Several with vars: %s"

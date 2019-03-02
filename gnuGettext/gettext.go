@@ -9,7 +9,7 @@ For quick/simple translations you can use the package level functions directly.
 
     import (
 	    "fmt"
-	    "github.com/leonelquinteros/gotext/gnuGettext"
+	    "github.com/DeineAgenturUG/gotext/gnuGettext"
     )
 
     func main() {
@@ -27,8 +27,8 @@ For quick/simple translations you can use the package level functions directly.
 package gnuGettext
 
 import (
-	"github.com/leonelquinteros/gotext"
-	"github.com/leonelquinteros/gotext/format"
+	"github.com/DeineAgenturUG/gotext"
+	"github.com/DeineAgenturUG/gotext/format"
 )
 
 // Sprinf alias from format submodule

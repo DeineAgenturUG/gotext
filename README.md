@@ -1,9 +1,9 @@
-[![GitHub release](https://img.shields.io/github/release/leonelquinteros/gotext.svg)](https://github.com/leonelquinteros/gotext)
+[![GitHub release](https://img.shields.io/github/release/leonelquinteros/gotext.svg)](https://github.com/DeineAgenturUG/gotext)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![GoDoc](https://godoc.org/github.com/leonelquinteros/gotext?status.svg)](https://godoc.org/github.com/leonelquinteros/gotext)
+[![GoDoc](https://godoc.org/github.com/DeineAgenturUG/gotext?status.svg)](https://godoc.org/github.com/DeineAgenturUG/gotext)
 [![Build Status](https://travis-ci.org/leonelquinteros/gotext.svg?branch=master)](https://travis-ci.org/leonelquinteros/gotext)
 [![codecov](https://codecov.io/gh/leonelquinteros/gotext/branch/master/graph/badge.svg)](https://codecov.io/gh/leonelquinteros/gotext)
-[![Go Report Card](https://goreportcard.com/badge/github.com/leonelquinteros/gotext)](https://goreportcard.com/report/github.com/leonelquinteros/gotext)
+[![Go Report Card](https://goreportcard.com/badge/github.com/DeineAgenturUG/gotext)](https://goreportcard.com/report/github.com/DeineAgenturUG/gotext)
 
 # Gotext
 
@@ -18,11 +18,14 @@
   - Support for variables inside translation strings using Go's [fmt syntax](https://golang.org/pkg/fmt/).
   - Support for [pluralization rules](https://www.gnu.org/software/gettext/manual/html_node/Translating-plural-forms.html).
   - Support for [message contexts](https://www.gnu.org/software/gettext/manual/html_node/Contexts.html).
+- Support for MO files. 
 - Thread-safe: This package is safe for concurrent use across multiple goroutines. 
 - It works with UTF-8 encoding as it's the default for Go language.
 - Unit tests available.
 - Language codes are automatically simplified from the form `en_UK` to `en` if the first isn't available.
 - Ready to use inside Go templates.
+- Objects are serializable to []byte to store them in cache.
+- Support for Go Modules.
 
 
 # License
@@ -32,13 +35,13 @@
 
 # Documentation
 
-Refer to the Godoc package documentation at (https://godoc.org/github.com/leonelquinteros/gotext)
+Refer to the Godoc package documentation at (https://godoc.org/github.com/DeineAgenturUG/gotext)
 
 
 # Installation 
 
 ```
-go get github.com/leonelquinteros/gotext
+go get github.com/DeineAgenturUG/gotext
 ```
 
 - There are no requirements or dependencies to use this package. 
@@ -46,14 +49,29 @@ go get github.com/leonelquinteros/gotext
 - No need for environment variables. Some naming conventions are applied but not needed.  
 
 
-#### Version vendoring
+## Version vendoring
 
 Stable releases use [semantic versioning](http://semver.org/spec/v2.0.0.html) tagging on this repository.
 
 You can rely on this to use your preferred vendoring tool or to manually retrieve the corresponding release tag from the GitHub repository.
 
 
-##### Vendoring with [gopkg.in](http://labix.org/gopkg.in)
+### Vendoring with [dep](https://golang.github.io/dep/)
+
+To use last stable version (v1.3.1 at the moment of writing)
+
+```
+dep ensure -add github.com/DeineAgenturUG/gotext@v1.3.1
+```
+
+Import as
+
+```go
+import "github.com/DeineAgenturUG/gotext"
+```
+
+
+### Vendoring with [gopkg.in](http://labix.org/gopkg.in)
 
 [http://gopkg.in/leonelquinteros/gotext.v1](http://gopkg.in/leonelquinteros/gotext.v1)
 
@@ -63,13 +81,25 @@ To get the latest v1 package stable release, execute:
 go get gopkg.in/leonelquinteros/gotext.v1
 ```
 
-To import this package, add the following line to your code:
+Import as
 
 ```go
 import "gopkg.in/leonelquinteros/gotext.v1"
 ```
 
 Refer to it as gotext.
+
+
+### Vendoring with [Go Modules](https://github.com/golang/go/wiki/Modules)
+
+Add `github.com/DeineAgenturUG/gotext` inside the  `require` section in your `go.mod` file.
+
+i.e.
+```
+require (
+    github.com/DeineAgenturUG/gotext v1.4.0
+)
+```
 
 
 # Locales directories structure
@@ -125,7 +155,7 @@ For quick/simple translations you can use the package level functions directly.
 ```go
 import (
     "fmt"
-    "github.com/leonelquinteros/gotext"
+    "github.com/DeineAgenturUG/gotext"
 )
 
 func main() {
@@ -149,7 +179,7 @@ Use the fmt.Printf syntax (from Go's "fmt" package) to specify how to print the 
 ```go
 import (
     "fmt"
-    "github.com/leonelquinteros/gotext"
+    "github.com/DeineAgenturUG/gotext"
 )
 
 func main() {
@@ -174,7 +204,7 @@ so you can handle each settings on their own.
 ```go
 import (
     "fmt"
-    "github.com/leonelquinteros/gotext"
+    "github.com/DeineAgenturUG/gotext"
 )
 
 func main() {
@@ -211,7 +241,7 @@ you can directly use the Po object to parse it and access the translations in th
 ```go
 import (
     "fmt"
-    "github.com/leonelquinteros/gotext"
+    "github.com/DeineAgenturUG/gotext"
 )
 
 func main() {
@@ -247,7 +277,7 @@ Plural formulas are parsed and evaluated using [Kinako](https://github.com/mattn
 ```go
 import (
     "fmt"
-    "github.com/leonelquinteros/gotext"
+    "github.com/DeineAgenturUG/gotext"
 )
 
 func main() {

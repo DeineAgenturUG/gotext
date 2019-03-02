@@ -16,7 +16,7 @@ msgstr ""
 # Initial comment
 # Headers below
 msgid "language"
-msgstr "en_US"
+msgstr "en_AU"
 
 # Some comment
 msgid "My text"

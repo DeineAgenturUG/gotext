@@ -4,6 +4,9 @@
 .buildpath
 .idea
 
+# golang jetbrains shit
+.idea
+
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o
 *.a
