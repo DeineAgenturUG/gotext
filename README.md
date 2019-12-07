@@ -2,8 +2,7 @@
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GoDoc](https://godoc.org/github.com/DeineAgenturUG/gotext?status.svg)](https://godoc.org/github.com/DeineAgenturUG/gotext)
 [![Build Status](https://travis-ci.org/leonelquinteros/gotext.svg?branch=master)](https://travis-ci.org/leonelquinteros/gotext)
-[![codecov](https://codecov.io/gh/leonelquinteros/gotext/branch/master/graph/badge.svg)](https://codecov.io/gh/leonelquinteros/gotext)
-[![Go Report Card](https://goreportcard.com/badge/github.com/DeineAgenturUG/gotext)](https://goreportcard.com/report/github.com/DeineAgenturUG/gotext)
+[![Go Report Card](https://goreportcard.com/badge/github.com/leonelquinteros/gotext)](https://goreportcard.com/report/github.com/leonelquinteros/gotext)
 
 # Gotext
 
@@ -56,12 +55,24 @@ Stable releases use [semantic versioning](http://semver.org/spec/v2.0.0.html) ta
 You can rely on this to use your preferred vendoring tool or to manually retrieve the corresponding release tag from the GitHub repository.
 
 
+### Vendoring with [Go Modules](https://github.com/golang/go/wiki/Modules) (Recommended)
+
+Add `github.com/leonelquinteros/gotext` inside the  `require` section in your `go.mod` file.
+
+i.e.
+```
+require (
+    github.com/leonelquinteros/gotext v1.4.0
+)
+```
+
+
 ### Vendoring with [dep](https://golang.github.io/dep/)
 
-To use last stable version (v1.3.1 at the moment of writing)
+To use last stable version (v1.4.0 at the moment of writing)
 
 ```
-dep ensure -add github.com/DeineAgenturUG/gotext@v1.3.1
+dep ensure -add github.com/leonelquinteros/gotext@v1.4.0
 ```
 
 Import as
@@ -88,19 +99,6 @@ import "gopkg.in/leonelquinteros/gotext.v1"
 ```
 
 Refer to it as gotext.
-
-
-### Vendoring with [Go Modules](https://github.com/golang/go/wiki/Modules)
-
-Add `github.com/DeineAgenturUG/gotext` inside the  `require` section in your `go.mod` file.
-
-i.e.
-```
-require (
-    github.com/DeineAgenturUG/gotext v1.4.0
-)
-```
-
 
 # Locales directories structure
 

@@ -190,7 +190,10 @@ func (l *Locale) GetND(dom, str, plural string, n int, vars ...interface{}) stri
 		return v.(Translator).GetN(str, plural, n, vars...)
 	}
 
-	// Return the same we received by default
+	// Use western default rule (plural > 1) to handle missing domain default result.
+	if n == 1 {
+		return Printf(str, vars...)
+	}
 	return Printf(plural, vars...)
 }
 
@@ -220,7 +223,10 @@ func (l *Locale) GetNDC(dom, str, plural string, n int, ctx string, vars ...inte
 		return v.(Translator).GetNC(str, plural, n, ctx, vars...)
 	}
 
-	// Return the same we received by default
+	// Use western default rule (plural > 1) to handle missing domain default result.
+	if n == 1 {
+		return Printf(str, vars...)
+	}
 	return Printf(plural, vars...)
 }
 
